@@ -1,0 +1,44 @@
+#include <Wire.h>
+#include "MAX30100_PulseOximeter.h"
+
+#define REPORTING_PERIOD_MS 1000
+
+PulseOximeter pox;
+uint32_t tsLastReport = 0;
+
+void onBeatDetected() {
+  Serial.println("💓 Beat detected!");
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Initializing MAX30100...");
+
+  // Initialize the sensor
+  if (!pox.begin()) {
+    Serial.println("❌ FAILED to initialize MAX30100");
+    while (true);  // Halt
+  } else {
+    Serial.println("✅ MAX30100 initialized");
+  }
+
+  // Optional: change IR LED current
+  pox.setIRLedCurrent(MAX30100_LED_CURR_7_6MA);
+
+  // Attach callback
+  pox.setOnBeatDetectedCallback(onBeatDetected);
+}
+
+void loop() {
+  // Continuously update the sensor
+  pox.update();
+
+  // Report once every REPORTING_PERIOD_MS milliseconds
+  if (millis() - tsLastReport > REPORTING_PERIOD_MS) {
+    Serial.print("BPM: ");
+    Serial.print(pox.getHeartRate());
+    Serial.print(" | SpO2: ");
+    Serial.println(pox.getSpO2());
+    tsLastReport = millis();
+  }
+}
