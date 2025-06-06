@@ -1,0 +1,44 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include "DHT.h"
+
+#define DHTPIN 4        // DHT Sensor Pin
+#define DHTTYPE DHT11   // or DHT22
+
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+String apiKey = "YOUR_API_KEY";  // Write API Key from ThingSpeak
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  dht.begin();
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("WiFi Connected");
+}
+
+void loop() {
+  float temp = dht.readTemperature();
+
+  if (WiFi.status() == WL_CONNECTED && !isnan(temp)) {
+    HTTPClient http;
+
+    String url = "http://api.thingspeak.com/update?api_key=" + apiKey + "&field1=" + String(temp);
+    http.begin(url);
+    int httpResponseCode = http.GET();
+    Serial.print("HTTP Response code: ");
+    Serial.println(httpResponseCode);
+    http.end();
+  } else {
+    Serial.println("WiFi not connected or sensor error");
+  }
+
+  delay(15000); // ThingSpeak accepts data every 15 seconds
+}
