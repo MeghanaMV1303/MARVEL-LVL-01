@@ -1,0 +1,13 @@
+import paho.mqtt.client as mqtt
+
+broker = "broker.hivemq.com"
+port = 1883
+topic = "led/control"
+
+client = mqtt.Client("PythonPublisher")
+client.connect(broker, port)
+
+while True:
+    message = input("Enter message (e.g., LED1 ON): ")
+    client.publish(topic, message)
+    print(f"Sent: {message}")
